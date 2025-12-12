@@ -531,6 +531,12 @@
                 <div class="result" id="result" style="display: none;"></div>
                 <div class="answer-display" id="answer-display" style="display: none;"></div>
                 
+                <div class="controls">
+                    <button class="btn nav-btn" id="prev-btn">上一题</button>
+                    <button class="btn submit-btn" id="submit-btn" disabled>提交答案</button>
+                    <button class="btn nav-btn" id="next-btn">下一题</button>
+                </div>
+
                 <div class="settings-bar">
                     <label>
                         <input type="checkbox" id="auto-next-check"> 
@@ -538,12 +544,6 @@
                     </label>
                     <button class="btn action-btn reset-btn" id="reset-btn">重置答题记录</button>
                     <button class="btn action-btn preview-btn" id="preview-btn">全卷预览</button>
-                </div>
-
-                <div class="controls">
-                    <button class="btn nav-btn" id="prev-btn">上一题</button>
-                    <button class="btn submit-btn" id="submit-btn" disabled>提交答案</button>
-                    <button class="btn nav-btn" id="next-btn">下一题</button>
                 </div>
             </div>
 
@@ -957,7 +957,7 @@
                     if (currentQuestionIndex === thisQuestionIndex && currentQuestionIndex < questions.length - 1) {
                         jumpToQuestion(currentQuestionIndex + 1);
                     }
-                }, 800);
+                }, 500);
             }
         }
 
