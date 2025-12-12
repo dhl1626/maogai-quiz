@@ -959,9 +959,10 @@
                     }
                 }, 500);
             }
+            showResult(isCorrect, question.answer, userAnswer);
         }
 
-        function showResult(isCorrect, ans) {
+        function showResult(isCorrect, correctAnswer, userAnswer) {
             resultDiv.style.display = 'block';
             answerDisplay.style.display = 'block';
             
@@ -972,7 +973,7 @@
                 resultDiv.textContent = '回答错误！✗';
                 resultDiv.className = 'result incorrect';
             }
-            answerDisplay.textContent = `正确答案：${ans}`;
+            answerDisplay.innerHTML = `正确答案：<b style="color: #2f855a;">${correctAnswer}</b> &nbsp; 你的答案：<b style="color: ${isCorrect ? '#2f855a' : '#c53030'};">${userAnswer}</b>`;
         }
 
         function setupEventListeners() {
