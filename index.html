@@ -308,6 +308,75 @@
         .type-badge.true_false { background: #d69e2e; }
         .type-badge.material { background: #e53e3e; }
 
+        /* 预览模式样式 */
+        .preview-container {
+            padding: 20px;
+            display: none; /* 默认隐藏 */
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .preview-item {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .preview-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .preview-question-text {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        .preview-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .preview-option {
+            padding: 10px;
+            background: white;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .preview-option.correct {
+            background: #c6f6d5;
+            border-color: #48bb78;
+        }
+        
+        .preview-option.user-selected-wrong {
+            background: #fed7d7;
+            border-color: #f56565;
+        }
+
+        .preview-answer-row {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #cbd5e0;
+            font-size: 14px;
+        }
+
         @media (max-width: 900px) {
             .wrapper {
                 flex-direction: column;
@@ -390,11 +459,29 @@
                 <div class="result" id="result" style="display: none;"></div>
                 <div class="answer-display" id="answer-display" style="display: none;"></div>
                 
+                <div class="settings-bar" style="text-align: center; margin-bottom: 10px;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; color: #4a5568;">
+                        <input type="checkbox" id="auto-next-check"> 
+                        <span style="font-size: 14px; font-weight: bold;">答对自动下一题</span>
+                    </label>
+                    <button class="btn reset-btn" id="reset-btn" style="margin-left: 15px; background: #e53e3e; color: white;">重置答题记录</button>
+                    <button class="btn" id="preview-btn" style="margin-left: 15px; background: #805ad5; color: white;">全卷预览</button>
+                </div>
+
                 <div class="controls">
                     <button class="btn nav-btn" id="prev-btn">上一题</button>
                     <button class="btn submit-btn" id="submit-btn" disabled>提交答案</button>
                     <button class="btn nav-btn" id="next-btn">下一题</button>
                 </div>
+            </div>
+
+            <!-- 全卷预览容器 -->
+            <div class="preview-container" id="preview-container">
+                <div class="preview-header">
+                    <h2>全卷预览</h2>
+                    <button class="btn nav-btn" id="close-preview-btn">返回答题</button>
+                </div>
+                <div id="preview-list"></div>
             </div>
         </div>
 
@@ -435,6 +522,13 @@
         const chapterSelect = document.getElementById('chapter-select');
         const sheetGrid = document.getElementById('sheet-grid');
         const typeBadge = document.getElementById('question-type-badge');
+
+        // Preview Elements
+        const previewBtn = document.getElementById('preview-btn');
+        const closePreviewBtn = document.getElementById('close-preview-btn');
+        const previewContainer = document.getElementById('preview-container');
+        const questionContainer = document.querySelector('.question-container');
+        const previewList = document.getElementById('preview-list');
 
         function initApp() {
             if (typeof quizManifest === 'undefined') {
@@ -747,7 +841,9 @@
 
         function submitAnswer() {
             if (hasAnswered) return;
-            const question = currentChapterData.questions[currentQuestionIndex];
+            const questions = currentChapterData.questions;
+            const question = questions[currentQuestionIndex];
+            const thisQuestionIndex = currentQuestionIndex;
             
             let isCorrect = false;
             let userAnswer = null;
@@ -780,6 +876,17 @@
                 if (isCorrect) item.classList.add('correct');
                 else item.classList.add('incorrect');
             }
+
+            // Auto Next Logic
+            const autoNext = document.getElementById('auto-next-check');
+            if (isCorrect && autoNext && autoNext.checked) {
+                setTimeout(() => {
+                    // Only jump if user hasn't moved manually
+                    if (currentQuestionIndex === thisQuestionIndex && currentQuestionIndex < questions.length - 1) {
+                        jumpToQuestion(currentQuestionIndex + 1);
+                    }
+                }, 800);
+            }
         }
 
         function showResult(isCorrect, ans) {
@@ -797,6 +904,47 @@
         }
 
         function setupEventListeners() {
+            // Auto Next Persistence
+            const autoNext = document.getElementById('auto-next-check');
+            if (autoNext) {
+                const saved = localStorage.getItem('autoNext');
+                if (saved !== null) autoNext.checked = (saved === 'true');
+                autoNext.addEventListener('change', () => {
+                    localStorage.setItem('autoNext', autoNext.checked);
+                });
+            }
+
+            // Reset Button Logic
+            const resetBtn = document.getElementById('reset-btn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    if (confirm('确定要重置所有答题记录吗？这将无法撤销。')) {
+                        answerState = {}; // Clear the stored answers
+                        // Re-render current question and answer sheet to reflect cleared state
+                        renderQuestion();
+                        renderAnswerSheet();
+                        alert('答题记录已重置！');
+                    }
+                });
+            }
+            
+            // Preview Logic
+            if (previewBtn) {
+                previewBtn.addEventListener('click', () => {
+                    renderPreview();
+                    questionContainer.style.display = 'none';
+                    previewContainer.style.display = 'block';
+                    // Scroll to top
+                    window.scrollTo(0, 0);
+                });
+            }
+            if (closePreviewBtn) {
+                closePreviewBtn.addEventListener('click', () => {
+                    previewContainer.style.display = 'none';
+                    questionContainer.style.display = 'block';
+                });
+            }
+
             submitBtn.addEventListener('click', submitAnswer);
             nextBtn.addEventListener('click', () => {
                 const total = currentChapterData.questions.length;
@@ -811,6 +959,122 @@
             });
             chapterSelect.addEventListener('change', (e) => {
                 loadChapter(e.target.value);
+            });
+        }
+
+        function renderPreview() {
+            if (!currentChapterData || !currentChapterData.questions) return;
+            previewList.innerHTML = '';
+            
+            const questions = currentChapterData.questions;
+            
+            questions.forEach((q, idx) => {
+                // Get User State
+                const state = answerState[`${currentChapterIndex}-${idx}`];
+                const userAns = state ? state.selected : null;
+                const isCorrect = state ? state.isCorrect : false;
+
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                
+                // Header
+                let typeText = "单选";
+                if(q.type === 'multiple') typeText = "多选";
+                if(q.type === 'true_false') typeText = "判断";
+                if(q.type === 'material') typeText = "材料";
+
+                const header = document.createElement('div');
+                header.className = 'preview-item-header';
+                header.innerHTML = `<span>第 ${idx + 1} 题 [${typeText}]</span>`;
+                item.appendChild(header);
+
+                // Text
+                const text = document.createElement('div');
+                text.className = 'preview-question-text';
+                text.textContent = q.question;
+                item.appendChild(text);
+
+                // Options / Answer Area
+                if (q.type === 'material') {
+                    const ansDiv = document.createElement('div');
+                    ansDiv.className = 'preview-option';
+                    ansDiv.style.whiteSpace = 'pre-line';
+                    ansDiv.textContent = `【参考答案】\n${q.answer}`;
+                    item.appendChild(ansDiv);
+                } else {
+                    // Render Options
+                    const optsDiv = document.createElement('div');
+                    optsDiv.className = 'preview-options';
+                    
+                    let opts = [];
+                    if (q.type === 'true_false') {
+                        opts = ["正确", "错误"];
+                    } else {
+                        // A, B, C...
+                        opts = q.options || []; 
+                    }
+
+                    opts.forEach((optText, optIdx) => {
+                        // Determine Key (A, B... or 正确/错误)
+                        let key = "";
+                        let displayKey = "";
+                        if (q.type === 'true_false') {
+                            key = optText;
+                            displayKey = optText;
+                        } else {
+                            key = String.fromCharCode(65 + optIdx);
+                            displayKey = `${key}. ${optText}`;
+                        }
+
+                        const optDiv = document.createElement('div');
+                        optDiv.className = 'preview-option';
+                        optDiv.textContent = displayKey;
+
+                        // Highlight Logic
+                        // 1. Always highlight correct answer in Green
+                        const isCorrectKey = q.type === 'multiple' ? q.answer.includes(key) : q.answer === key;
+                        
+                        // 2. If user selected this and it's WRONG, highlight Red
+                        let isUserSelected = false;
+                        if (userAns) {
+                            if (Array.isArray(userAns)) isUserSelected = userAns.includes(key); // Shouldn't happen based on current logic (string joined)
+                            else isUserSelected = userAns.includes(key); // For multiple strings like "AB"
+                            
+                            // Specific check for single/true_false where userAns is exact string
+                            if (q.type !== 'multiple') isUserSelected = (userAns === key);
+                        }
+
+                        if (isCorrectKey) {
+                            optDiv.classList.add('correct');
+                        } else if (isUserSelected && !isCorrectKey) {
+                            optDiv.classList.add('user-selected-wrong');
+                        }
+                        
+                        // Optional: Mark user selection if correct? (It's already green)
+                        // Maybe add a marker text if it's the user's choice?
+                        if (isUserSelected) {
+                            optDiv.textContent += " (你的选择)";
+                            optDiv.style.fontWeight = "bold";
+                        }
+
+                        optsDiv.appendChild(optDiv);
+                    });
+                    item.appendChild(optsDiv);
+                }
+
+                // Bottom Answer Row (Explicit)
+                const ansRow = document.createElement('div');
+                ansRow.className = 'preview-answer-row';
+                let userText = userAns ? userAns : "未作答";
+                if (q.type === 'material' && userAns === 'viewed') userText = "已查看";
+                
+                ansRow.innerHTML = `
+                    <span style="margin-right: 20px;">正确答案: <b style="color: #2f855a;">${q.answer}</b></span>
+                    <span>你的答案: <b style="color: ${isCorrect ? '#2f855a' : '#c53030'};">${userText}</b></span>
+                `;
+                item.appendChild(ansRow);
+
+                previewList.appendChild(item);
             });
         }
 
