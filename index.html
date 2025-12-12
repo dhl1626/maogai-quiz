@@ -308,6 +308,58 @@
         .type-badge.true_false { background: #d69e2e; }
         .type-badge.material { background: #e53e3e; }
 
+        /* 设置栏样式 */
+        .settings-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        
+        .settings-bar label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .settings-bar label:hover {
+            background: #edf2f7;
+        }
+
+        .action-btn {
+            font-size: 14px;
+            padding: 8px 16px;
+            min-width: auto; /* Override .btn min-width if needed */
+        }
+
+        .reset-btn {
+            background: #e53e3e;
+            color: white;
+        }
+        .reset-btn:hover {
+            background: #c53030;
+        }
+        
+        .preview-btn {
+            background: #805ad5;
+            color: white;
+        }
+        .preview-btn:hover {
+            background: #6b46c1;
+        }
+
         /* 预览模式样式 */
         .preview-container {
             padding: 20px;
@@ -426,6 +478,26 @@
                 font-size: 14px;
                 padding: 12px 0;
             }
+            
+            /* Mobile Settings Bar */
+            .settings-bar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px;
+            }
+            .settings-bar label {
+                width: 100%;
+                justify-content: center;
+                background: white;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+            }
+            .settings-bar .btn {
+                width: 100%;
+                margin: 0;
+            }
+            /* Make buttons side-by-side on mobile inside settings bar? */
+            /* Let's try to group buttons if possible, or just stack them. Stacking is safer for touch targets. */
         }
     </style>
 </head>
@@ -459,13 +531,13 @@
                 <div class="result" id="result" style="display: none;"></div>
                 <div class="answer-display" id="answer-display" style="display: none;"></div>
                 
-                <div class="settings-bar" style="text-align: center; margin-bottom: 10px;">
-                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; color: #4a5568;">
+                <div class="settings-bar">
+                    <label>
                         <input type="checkbox" id="auto-next-check"> 
-                        <span style="font-size: 14px; font-weight: bold;">答对自动下一题</span>
+                        <span>答对自动下一题</span>
                     </label>
-                    <button class="btn reset-btn" id="reset-btn" style="margin-left: 15px; background: #e53e3e; color: white;">重置答题记录</button>
-                    <button class="btn" id="preview-btn" style="margin-left: 15px; background: #805ad5; color: white;">全卷预览</button>
+                    <button class="btn action-btn reset-btn" id="reset-btn">重置答题记录</button>
+                    <button class="btn action-btn preview-btn" id="preview-btn">全卷预览</button>
                 </div>
 
                 <div class="controls">
