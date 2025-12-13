@@ -777,7 +777,7 @@
 
             // Result
             if (savedState && question.type !== "material") {
-                showResult(savedState.isCorrect, question.answer);
+                showResult(savedState.isCorrect, question.answer, savedState.selected);
             } else {
                 resultDiv.style.display = 'none';
                 answerDisplay.style.display = 'none';
