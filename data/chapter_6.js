@@ -334,7 +334,7 @@ window.chapterData_5 = {
       "type": "multiple",
       "question": "1.邓小平指出，领导制度、组织制度问题更带有()",
       "options": [
-        "A.根本性"
+        "A.根本性",
         "B.全局性",
         "C.稳定性",
         "D.长期性"
@@ -608,6 +608,7 @@ window.chapterData_5 = {
     }
   ]
 };
+
 
 
 
